@@ -1,5 +1,6 @@
 clear all 
 clc
+
 N = 5;
 u = [1 4 2 2 2]; % pierwszy przybliżony ciąg sterowań
 K = 15;          % maksymalna liczba iteracji 
@@ -40,7 +41,7 @@ Jk(k) = J(x,u);
 normBn = norm(bn(u,p(2:N+1)));
  
  % Funkcja do minimalizacji J(t)
-    J_t = @(t) J_t_function(t, x, u, b, f, L, N);
+    J_t = @(t) J_t_function(t, x, u, b, f,J, N);
     
     % Znalezienie optymalnego t za pomocą fminsearch
     options = optimset('Display', 'off'); % Wyłączenie wyświetlania komunikatów
@@ -73,11 +74,11 @@ xlabel('Numer sterowania n')
 ylabel('Wartość sterowania u')
 hold off
 % Funkcja obliczająca J(t) dla danego t
-function cost = J_t_function(t, x, u, b, f, L, N)
+function cost = J_t_function(t, x, u, b, f,J, N)
     u_new = u - t * b;
     x_new = x;
     for i = 1:(N-1)
         x_new(i+1) = f(x_new(i), u_new(i));
     end
-    cost = sum(L(x_new, u_new));
+    cost = J(x_new,u_new);
 end

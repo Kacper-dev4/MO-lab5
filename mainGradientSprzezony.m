@@ -26,7 +26,7 @@ bn = @(u,p) 2*u + 0.5*p;
 
 normBn = norm(bn(u, p(2:N+1)));
 k = 1; % numer iteracji
-b_prev = zeros(1,N); % przechowuje gradient z poprzedniej iteracji
+b_pop = zeros(1,N); % przechowuje gradient z poprzedniej iteracji
 
 while k <= K && eps < normBn
     % Obliczenie stanów x dla aktualnych sterowań u
@@ -51,12 +51,12 @@ while k <= K && eps < normBn
     if k == 1
         d = -b; % W pierwszej iteracji kierunek to -b
     else
-        c = (norm(b)^2) / (norm(b_prev)^2); % Współczynnik Fletchera-Reevesa
+        c = (norm(b)^2) / (norm(b_pop)^2); % Współczynnik Fletchera-Reevesa
         d = -b + c * d; % Aktualizacja kierunku sprzężonego
     end
     
     % Funkcja do minimalizacji J(t)
-    J_t = @(t) J_t_function(t, x, u, d, f, L, N);
+    J_t = @(t) J_t_function(t, x, u, d, f, J, N);
     
     % Znalezienie optymalnego t za pomocą fminsearch
     options = optimset('Display', 'off');
@@ -67,7 +67,7 @@ while k <= K && eps < normBn
     uk(k,:) = u;
     
     % Zapamiętanie gradientu dla następnej iteracji
-    b_prev = b;
+    b_pop = b;
     
     k = k + 1;
 end
@@ -89,15 +89,14 @@ hold on
 plot(0:N-1, uk(1:k-1,:))
 xlabel('Numer sterowania n')
 ylabel('Wartość sterowania u')
-legend show
 hold off
 
 % Funkcja obliczająca J(t) dla danego t
-function cost = J_t_function(t, x, u, d, f, L, N)
+function cost = J_t_function(t, x, u, d, f, J, N)
     u_new = u + t * d; % Kierunek d już uwzględnia znak (-b)
     x_new = x;
     for i = 1:(N-1)
         x_new(i+1) = f(x_new(i), u_new(i));
     end
-    cost = sum(L(x_new, u_new));
+    cost = J(x_new, u_new);
 end
